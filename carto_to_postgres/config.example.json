@@ -3,7 +3,7 @@
 	"api_key": "your_carto_master_api_key",
 	"schema": "target_database_schema",
 	"if_exists": "replace",
-	"table_list": ['table_name_1', 'table_name_2'],
+	"table_list": ["table_name_1", "table_name_2"],
 	"host": "your_database_host",
 	"user": "your_database_user",
 	"password": "your_database_user_password"
