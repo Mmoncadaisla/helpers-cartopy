@@ -4,6 +4,7 @@
 	"schema": "target_database_schema",
 	"if_exists": "replace",
 	"table_list": ["table_name_1", "table_name_2"],
+	"database": "your_database_name",
 	"host": "your_database_host",
 	"user": "your_database_user",
 	"password": "your_database_user_password"
