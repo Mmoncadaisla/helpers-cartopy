@@ -229,4 +229,4 @@ param_dict = {
 for table_name in tqdm(table_list):
 
     carto_to_postgis(username=username, table_name=table_name, api_key=api_key,
-                     schema=schema, **param_dict, if_exists='replace')
+                     schema=schema, **param_dict, if_exists=if_exists)
