@@ -42,7 +42,15 @@ def download_carto_dataset(username, api_key, table_name):
     return file_name
 
 
-def connect_database(host, database, user, password):
+def connect_database(
+        host,
+        database,
+        user,
+        password,
+        sslmode=None,
+        sslrootcert=None,
+        sslcert=None,
+        sslkey=None):
     """
     Function to connect to a PostgreSQL database
 
@@ -54,9 +62,30 @@ def connect_database(host, database, user, password):
         password: user's corresponding password (str)
     """
 
-    engine = create_engine(f"postgresql+psycopg2://{host}:{user}@{password}/{database}")
+    args = {
+        "host": host,
+        "user": user,
+        "password": password,
+        "database": database,
+        "sslcert": sslcert,
+        "sslkey": sslkey,
+        "sslrootcert": sslrootcert,
+        "sslmode": sslmode
+    }
 
-    con = psycopg2.connect(host=host, database=database, user=user, password=password)
+    engine = create_engine(
+        f"postgresql+psycopg2://{host}:{user}@{password}/{database}",
+        connect_args=args)
+
+    con = psycopg2.connect(
+        host=host,
+        database=database,
+        user=user,
+        password=password,
+        sslmode=sslmode,
+        sslrootcert=sslrootcert,
+        sslcert=sslcert,
+        sslkey=sslkey)
 
     return engine, con
 
@@ -81,7 +110,13 @@ def check_table_name_length(table_name):
     return table_name
 
 
-def create_table_postgis(file_name, table_name, schema, engine, con, if_exists='replace'):
+def create_table_postgis(
+        file_name,
+        table_name,
+        schema,
+        engine,
+        con,
+        if_exists='replace'):
     """
     Function that given a CSV file path, creates a table inside the Postgres database
     with the correct data structure
@@ -107,7 +142,8 @@ def create_table_postgis(file_name, table_name, schema, engine, con, if_exists='
     """
 
     if if_exists not in COLLISION_STRATEGIES:
-        raise ValueError("if_exists was not in available options, please try 'fail' or 'replace'")
+        raise ValueError(
+            "if_exists was not in available options, please try 'fail' or 'replace'")
 
     proceed_copy = True
 
@@ -119,9 +155,14 @@ def create_table_postgis(file_name, table_name, schema, engine, con, if_exists='
 
     df = pd.read_csv(file_name, nrows=10)
 
-    columns_ordered = [col if (col != 'the_geom') else 'geometry' for col in df.columns.values]
+    columns_ordered = [col if (col != 'the_geom')
+                       else 'geometry' for col in df.columns.values]
 
-    gdf = gpd.GeoDataFrame(df, crs='EPSG:4326', geometry=decode_geometry(df['the_geom']))
+    gdf = gpd.GeoDataFrame(
+        df,
+        crs='EPSG:4326',
+        geometry=decode_geometry(
+            df['the_geom']))
 
     gdf['geometry'].fillna(value, inplace=True)
 
@@ -130,11 +171,16 @@ def create_table_postgis(file_name, table_name, schema, engine, con, if_exists='
     gdf = gdf.reindex(columns=columns_ordered)
 
     try:
-        gdf.astype(object).to_postgis(name=table_name, schema=schema, con=engine, if_exists=if_exists)
+        gdf.astype(object).to_postgis(
+            name=table_name,
+            schema=schema,
+            con=engine,
+            if_exists=if_exists)
 
-        cursor.execute(f"truncate table {schema}.{table_name};")
+        cursor.execute(f'truncate table "{schema}".{table_name};')
 
-        cursor.execute(f"alter table {schema}.{table_name} rename column geometry to the_geom;")
+        cursor.execute(
+            f'alter table "{schema}".{table_name} rename column geometry to the_geom;')
 
     except Exception as e:
         proceed_copy = False
@@ -143,7 +189,19 @@ def create_table_postgis(file_name, table_name, schema, engine, con, if_exists='
     return proceed_copy, cursor
 
 
-def dataset_to_postgis(file_name, table_name, schema, host, database, user, password, if_exists='replace'):
+def dataset_to_postgis(
+        file_name,
+        table_name,
+        schema,
+        host,
+        database,
+        user,
+        password,
+        sslmode=None,
+        sslrootcert=None,
+        sslcert=None,
+        sslkey=None,
+        if_exists='replace'):
     """
     Function that uploads a dataset (CSV file) to a Postgres database.
 
@@ -160,15 +218,17 @@ def dataset_to_postgis(file_name, table_name, schema, host, database, user, pass
     """
 
     engine, con = connect_database(host=host, database=database,
-                                   user=user, password=password)
+                                   user=user, password=password,
+                                   sslmode=sslmode, sslrootcert=sslrootcert,
+                                   sslcert=sslcert, sslkey=sslkey)
 
-    proceed_copy, cursor = create_table_postgis(file_name=file_name, table_name=table_name,
-                                                schema=schema, engine=engine, con=con, if_exists=if_exists)
+    proceed_copy, cursor = create_table_postgis(
+        file_name=file_name, table_name=table_name, schema=schema, engine=engine, con=con, if_exists=if_exists)
 
     if proceed_copy:
 
         copy_sql = f"""
-               COPY {schema}.{table_name} FROM stdin WITH CSV HEADER
+               COPY "{schema}".{table_name} FROM stdin WITH CSV HEADER
                DELIMITER as ','
                """
         print(f"Copying dataset {table_name} to postgres")
@@ -185,7 +245,20 @@ def dataset_to_postgis(file_name, table_name, schema, host, database, user, pass
             cursor.close()
 
 
-def carto_to_postgis(username, table_name, api_key, schema, host, database, user, password, if_exists='replace'):
+def carto_to_postgis(
+        username,
+        table_name,
+        api_key,
+        schema,
+        host,
+        database,
+        user,
+        password,
+        sslmode=None,
+        sslrootcert=None,
+        sslcert=None,
+        sslkey=None,
+        if_exists='replace'):
     """
     Function that downloads a CARTO dataset and uploads it to a PostgreSQL database.
 
@@ -204,8 +277,19 @@ def carto_to_postgis(username, table_name, api_key, schema, host, database, user
     file_name = download_carto_dataset(username=username, api_key=api_key,
                                        table_name=table_name)
 
-    dataset_to_postgis(file_name=file_name, table_name=table_name, schema=schema, host=host,
-                       database=database, user=user, password=password, if_exists=if_exists)
+    dataset_to_postgis(
+        file_name=file_name,
+        table_name=table_name,
+        schema=schema,
+        host=host,
+        database=database,
+        user=user,
+        password=password,
+        sslmode=sslmode,
+        sslrootcert=sslrootcert,
+        sslcert=sslcert,
+        sslkey=sslkey,
+        if_exists=if_exists)
 
     os.remove(file_name)
 
@@ -223,7 +307,11 @@ param_dict = {
     "host": config.get('host'),
     "database": config.get('database'),
     "user": config.get('user'),
-    "password": config.get('password')
+    "password": config.get('password'),
+    "sslcert": config.get('sslcert'),
+    "sslkey": config.get('sslkey'),
+    "sslrootcert": config.get('sslrootcert'),
+    "sslmode": config.get('sslmode')
 }
 
 for table_name in tqdm(table_list):
