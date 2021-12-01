@@ -7,6 +7,10 @@
 	"database": "your_database_name",
 	"host": "your_database_host",
 	"user": "your_database_user",
-	"password": "your_database_user_password"
+	"password": "your_database_user_password",
+	"sslcert": "/path/to/client.crt",
+    "sslkey": "/path/to/client.key",
+    "sslrootcert": "/path/to/server_ca.pem",
+    "sslmode": "verify-full"
 
 }
