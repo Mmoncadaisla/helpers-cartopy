@@ -47,6 +47,7 @@ def connect_database(
         database,
         user,
         password,
+        port=None,
         sslmode=None,
         sslrootcert=None,
         sslcert=None,
@@ -65,16 +66,17 @@ def connect_database(
     args = {
         "host": host,
         "user": user,
+        "port": port or 5432,
         "password": password,
         "database": database,
-        "sslcert": sslcert,
-        "sslkey": sslkey,
-        "sslrootcert": sslrootcert,
-        "sslmode": sslmode
+        "sslcert": sslcert or None,
+        "sslkey": sslkey or None,
+        "sslrootcert": sslrootcert or None,
+        "sslmode": sslmode or 'prefer'
     }
 
     engine = create_engine(
-        f"postgresql+psycopg2://{host}:{user}@{password}/{database}",
+        f"postgresql+psycopg2://{host}:{port}:{user}@{password}/{database}",
         connect_args=args)
 
     con = psycopg2.connect(
@@ -306,6 +308,7 @@ table_list = config.get('table_list')
 param_dict = {
     "host": config.get('host'),
     "database": config.get('database'),
+    "port": config.get('port'),
     "user": config.get('user'),
     "password": config.get('password'),
     "sslcert": config.get('sslcert'),
