@@ -163,7 +163,7 @@ def create_table_postgis(
 
     gdf = gpd.GeoDataFrame(
         df,
-        crs='EPSG:4326',
+        crs=4326,
         geometry=decode_geometry(
             df['the_geom']))
 
