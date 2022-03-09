@@ -199,6 +199,7 @@ def dataset_to_postgis(
         database,
         user,
         password,
+        port=None,
         sslmode=None,
         sslrootcert=None,
         sslcert=None,
@@ -221,6 +222,7 @@ def dataset_to_postgis(
 
     engine, con = connect_database(host=host, database=database,
                                    user=user, password=password,
+                                   port=port,
                                    sslmode=sslmode, sslrootcert=sslrootcert,
                                    sslcert=sslcert, sslkey=sslkey)
 
@@ -256,6 +258,7 @@ def carto_to_postgis(
         database,
         user,
         password,
+        port=None,
         sslmode=None,
         sslrootcert=None,
         sslcert=None,
@@ -286,6 +289,7 @@ def carto_to_postgis(
         host=host,
         database=database,
         user=user,
+        port=port,
         password=password,
         sslmode=sslmode,
         sslrootcert=sslrootcert,
