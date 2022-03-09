@@ -83,6 +83,7 @@ def connect_database(
         host=host,
         database=database,
         user=user,
+        port=port,
         password=password,
         sslmode=sslmode,
         sslrootcert=sslrootcert,
